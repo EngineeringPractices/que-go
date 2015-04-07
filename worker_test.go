@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -49,15 +50,19 @@ func TestWorkerShutdown(t *testing.T) {
 	defer truncateAndClose(c.pool)
 
 	w := NewWorker(c, WorkMap{})
-	finished := false
+	done := make(chan struct{})
 	go func() {
 		w.Work()
-		finished = true
+		close(done)
 	}()
 	w.Shutdown()
-	if !finished {
-		t.Errorf("want finished=true")
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for worker to shutdown")
 	}
+
 	if !w.done {
 		t.Errorf("want w.done=true")
 	}
