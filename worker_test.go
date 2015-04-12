@@ -224,11 +224,11 @@ func TestWorkerWorkOneTypeNotInMap(t *testing.T) {
 		t.Errorf("want success=false")
 	}
 
-	if currentConns != c.pool.Stat().CurrentConnections {
-		t.Errorf("want currentConns euqual: before=%d  after=%d", currentConns, c.pool.Stat().CurrentConnections)
+	if currentConns != c.pool.Stat().CurrentConnections-1 {
+		t.Errorf("want currentConns equal: before=%d  after=%d", currentConns, c.pool.Stat().CurrentConnections)
 	}
-	if availConns != c.pool.Stat().AvailableConnections {
-		t.Errorf("want availConns euqual: before=%d  after=%d", availConns, c.pool.Stat().AvailableConnections)
+	if availConns != c.pool.Stat().AvailableConnections-1 {
+		t.Errorf("want availConns equal: before=%d  after=%d", availConns, c.pool.Stat().AvailableConnections)
 	}
 
 	tx, err := c.pool.Begin()
