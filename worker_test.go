@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -49,15 +50,19 @@ func TestWorkerShutdown(t *testing.T) {
 	defer truncateAndClose(c.pool)
 
 	w := NewWorker(c, WorkMap{})
-	finished := false
+	done := make(chan struct{})
 	go func() {
 		w.Work()
-		finished = true
+		close(done)
 	}()
 	w.Shutdown()
-	if !finished {
-		t.Errorf("want finished=true")
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("timed out waiting for worker to shutdown")
 	}
+
 	if !w.done {
 		t.Errorf("want w.done=true")
 	}
@@ -219,11 +224,11 @@ func TestWorkerWorkOneTypeNotInMap(t *testing.T) {
 		t.Errorf("want success=false")
 	}
 
-	if currentConns != c.pool.Stat().CurrentConnections {
-		t.Errorf("want currentConns euqual: before=%d  after=%d", currentConns, c.pool.Stat().CurrentConnections)
+	if currentConns != c.pool.Stat().CurrentConnections-1 {
+		t.Errorf("want currentConns equal: before=%d  after=%d", currentConns, c.pool.Stat().CurrentConnections)
 	}
-	if availConns != c.pool.Stat().AvailableConnections {
-		t.Errorf("want availConns euqual: before=%d  after=%d", availConns, c.pool.Stat().AvailableConnections)
+	if availConns != c.pool.Stat().AvailableConnections-1 {
+		t.Errorf("want availConns equal: before=%d  after=%d", availConns, c.pool.Stat().AvailableConnections)
 	}
 
 	tx, err := c.pool.Begin()
