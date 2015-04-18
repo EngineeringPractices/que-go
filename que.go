@@ -128,7 +128,7 @@ func (j *Job) Error(msg string) error {
 	return nil
 }
 
-// lock creates a goroutine to bump LockedUntil by 10 seconds every 5 seconds.
+// lock creates a goroutine to bump LockedUntil by 10 seconds every 3 seconds.
 func (j *Job) lock() {
 	j.setLockedUntil(10)
 	go func() {
@@ -138,7 +138,7 @@ func (j *Job) lock() {
 				j.setLockedUntil(0)
 				close(j.unlocked)
 				return
-			case <-time.After(5 * time.Second):
+			case <-time.After(3 * time.Second):
 				// TODO: if we can't bump the lock, stop working the job
 				j.setLockedUntil(10)
 			}
